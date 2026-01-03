@@ -38,9 +38,9 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          script_stop: false
           script: |
             sudo pkill -f uvicorn || true
             cd /home/azureuser/app
             sudo pip3 install -r requirements.txt
-            sudo nohup uvicorn main:app --host 0.0.0.0 --port 80 > app.log 2>&1 < /dev/null &
+            sudo nohup uvicorn main:app --host 0.0.0.0 --port 80 > app.log 2>&1 </dev/null &
+            
