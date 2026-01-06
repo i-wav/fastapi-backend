@@ -1,4 +1,4 @@
-name: Deploy FastAPI Backend
+name: Deploy FastAPI Backend (Zero Downtime)
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           source: "."
           target: "/home/azureuser/app"
 
-      - name: Run app on VM
+      - name: Deploy on VM
         uses: appleboy/ssh-action@v1.0.0
         continue-on-error: true
         with:
@@ -40,9 +40,18 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            sudo pkill -f uvicorn || true
             cd /home/azureuser/app
             sudo pip3 install -r requirements.txt
-            sudo nohup uvicorn main:app --host 0.0.0.0 --port 80 > app.log 2>&1 </dev/null &
 
-            
+            if pgrep -f "gunicorn.*main:app" > /dev/null; then
+              echo "Reloading Gunicorn (zero downtime)"
+              sudo pkill -HUP -f "gunicorn.*main:app"
+            else
+              echo "Starting Gunicorn"
+              sudo nohup gunicorn main:app \
+                -k uvicorn.workers.UvicornWorker \
+                --bind 0.0.0.0:80 \
+                --workers 2 \
+                --graceful-timeout 30 \
+                > app.log 2>&1 &
+            fi
