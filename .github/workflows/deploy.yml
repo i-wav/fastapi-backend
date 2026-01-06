@@ -43,7 +43,7 @@ jobs:
             cd /home/azureuser/app
             sudo pip3 install -r requirements.txt
 
-            if pgrep -f "gunicorn.*main:app" > /dev/null; then
+            if pgrep -f "gunicorn.*main:app" > /dev/null; then 
               echo "Reloading Gunicorn (zero downtime)"
               sudo pkill -HUP -f "gunicorn.*main:app"
             else
